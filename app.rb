@@ -12,15 +12,14 @@ user_student = nil
 user_teacher_name = nil
 
 STUDENT_MENU = [
-    "QUIT",
     "List Required Course",
     "List Missed Courses",
     "List Completed Course",
-    "List Classmates"
+    "List Classmates",
+    "QUIT"
 ]
 
 TEACHER_MENU = [
-    "QUIT",
     "List All Students",
     "List All Courses",
     "Add a Student",
@@ -28,7 +27,13 @@ TEACHER_MENU = [
     "Create a Course Assignment",
     "Mark Attendance",
     "List my Courses",
-    "List Truents"
+    "List Truents",
+    "QUIT"
+]
+
+COURSE_ASSIGNMENT_STATES = [
+    "Incomplete",
+    "Complete",
 ]
 
 while running
@@ -73,11 +78,21 @@ while running
                 end
                 Course.create(name: result[:name], teacher_name: result[:teacher_name], date_time: result[:date_time])
             when "Create a Course Assignment"
-                puts "Create a Course Assignment"
+                courses = Course.courses_with_ids(Course.all)
+                selected_course_id = prompt.select("Which course?", courses, per_page: courses.length)
+                students = Student.students_with_ids(Student.all)
+                selected_students_ids = prompt.multi_select("Which students?", students, per_page: students.length)
+
+                selected_students_ids.each do |student_id|
+                    course_assignment = Student_course.create(student_id: student_id, course_id: selected_course_id, status: "Incomplete")
+                end
             when "Mark Attendance"
-                puts "Mark Attendance"
+                student_courses = Student_course.student_courses_with_ids(Student_course.all)
+                selected_student_course_id = prompt.select("Which assignment?", student_courses, per_page: student_courses.length)
+                selected_student_course_record = Student_course.find(selected_student_course_id)
+                selected_student_course_record.update(status: "Complete")
             when "List my Courses"
-                puts "List my Courses"
+                Course.display_course_list_sorted(Course.where(teacher_name: user_teacher_name))
             when "List Truents"
                 puts "List Truents"
             else
@@ -87,12 +102,14 @@ while running
             puts "User not recognized."
         end
     else
-        command = prompt.select("What kind of user are you", user_types)
+        command = prompt.select("What kind of user are you", user_types, per_page: user_types.length)
 
         case command
         when "Student"
             user_selected = true
             user_type = :student
+            students = Student.students_with_ids(Student.all)
+            user_student = prompt.select("Which students?", students, per_page: students.length)
         when "Teacher"
             user_selected = true
             user_type = :teacher
