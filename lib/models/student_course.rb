@@ -1,4 +1,4 @@
-class Student_course < ActiveRecord::Base
+class StudentCourse < ActiveRecord::Base
     belongs_to :student
     belongs_to :course
 
@@ -25,7 +25,7 @@ class Student_course < ActiveRecord::Base
     def self.display_student_course_list_sorted (student_courses)
         student_courses_text = student_courses.map {|student_course| student_course.display_text}
         student_courses_text = student_courses_text.sort
-        display_table = TTY::Table.new Student_course.display_text_headers, student_courses_text
+        display_table = TTY::Table.new StudentCourse.display_text_headers, student_courses_text
 
         puts display_table.render(:ascii, padding: [0,1])       
     end
