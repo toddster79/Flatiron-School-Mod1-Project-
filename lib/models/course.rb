@@ -1,6 +1,7 @@
 class Course < ActiveRecord::Base
     has_many :student_courses
     has_many :students, through: :student_courses
+    belongs_to :teacher
 
     require_relative "../../config/environment"
 
@@ -9,7 +10,8 @@ class Course < ActiveRecord::Base
     end
 
     def display_text
-        ["#{self.name}", "#{self.teacher_name}", "#{self.date_time}"]
+        parsed_date_time = DateTime.parse(self.date_time).strftime("%d-%m-%y %H:%M")
+        ["#{self.name}", "#{self.teacher.display_text}", "#{parsed_date_time}"]
     end
 
     def self.courses_with_ids(courses)
@@ -26,7 +28,7 @@ class Course < ActiveRecord::Base
         courses_text = courses.map {|course| course.display_text}
         courses_text = courses_text.sort
         display_table = TTY::Table.new Course.display_text_headers, courses_text
-
+        
         puts display_table.render(:ascii, padding: [0,1])
     end
 end
