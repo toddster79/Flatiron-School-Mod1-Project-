@@ -10,7 +10,7 @@ class Course < ActiveRecord::Base
     end
 
     def display_text
-        parsed_date_time = DateTime.parse(self.date_time).strftime("%d-%m-%y %H:%M")
+        parsed_date_time = DateTime.parse(self.date_time).strftime("%m-%d-%y %H:%M")
         ["#{self.name}", "#{self.teacher.display_text}", "#{parsed_date_time}"]
     end
 
