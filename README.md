@@ -50,3 +50,6 @@ A `Teacher` is able to:
 * `List Missed Course Assignment` - List all of the assignements for course that have passed where the student was not marked as in attendance
 * `SWITCH USER` - Switch to a different user
 * `QUIT` - Quit the application
+
+### Keyboard Shortcuts
+Pressing the `Esc` key at any time will clear the screen.

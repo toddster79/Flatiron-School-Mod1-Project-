@@ -33,9 +33,13 @@ COURSE_ASSIGNMENT_STATES = [
 
 user_data = {selected: false, user_type: nil, user_id: nil}
 running = true
-prompt = TTY::Prompt.new
+prompt = TTY::Prompt.new(track_history: true)
 
 puts "Welcome to the Course Scheduler."
+
+prompt.on(:keyescape) do |event|
+    system("clear")
+end
 
 while running
     if user_data[:selected]
