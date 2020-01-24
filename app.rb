@@ -3,10 +3,11 @@ require_relative "config/environment"
 USER_TYPES = ["Student", "Teacher"]
 
 STUDENT_MENU = [
-    "List Required Course",
+    "List Required Courses",
     "List Missed Courses",
     "List Completed Course",
     "List Classmates",
+    "SWITCH USER",
     "QUIT"
 ]
 
@@ -18,9 +19,10 @@ TEACHER_MENU = [
     "Add a Course",
     "List All Course Assignments",
     "Create a Course Assignment",
-    "Delete a Course Assignment"
+    "Delete a Course Assignment",
     "Mark Attendance",
     "List Missed Course Assignment",
+    "SWITCH USER",
     "QUIT"
 ]
 
@@ -33,7 +35,7 @@ user_data = {selected: false, user_type: nil, user_id: nil}
 running = true
 prompt = TTY::Prompt.new
 
-puts "Welcome to the Course Machine."
+puts "Welcome to the Course Scheduler."
 
 while running
     if user_data[:selected]
@@ -41,10 +43,12 @@ while running
         when USER_TYPES[0]
             command = prompt.select("What would you like to do #{Student.find(user_data[:user_id]).first_name}?", STUDENT_MENU, per_page: STUDENT_MENU.length)
             case command
+            when "SWITCH USER"
+                user_data = {selected: false, user_type: nil, user_id: nil}
             when "QUIT"
                 running = false
-            when "List Required Course"
-                incomplete_course_assignments = Student.find(user_data[:user_id]).student_courses.where(status: "Incomplete")
+            when "List Required Courses"
+                incomplete_course_assignments = Student.find(user_data[:user_id]).student_courses.where(status: COURSE_ASSIGNMENT_STATES[0])
                 incomplete_courses = incomplete_course_assignments.map {|incomplete_course_assignment| incomplete_course_assignment.course}
                 required_courses = incomplete_courses.select {|incomplete_course| incomplete_course.date_time >= Time.now.to_datetime}
                 if required_courses.count > 0
@@ -53,7 +57,7 @@ while running
                     puts "  You don't have any required courses."
                 end
             when "List Missed Courses"
-                incomplete_course_assignments = Student.find(user_data[:user_id]).student_courses.where(status: "Incomplete")
+                incomplete_course_assignments = Student.find(user_data[:user_id]).student_courses.where(status: COURSE_ASSIGNMENT_STATES[0])
                 incomplete_courses = incomplete_course_assignments.map {|incomplete_course_assignment| incomplete_course_assignment.course}
                 missed_courses = incomplete_courses.select {|incomplete_course| incomplete_course.date_time < Time.now.to_datetime}
                 if missed_courses.count > 0
@@ -62,7 +66,7 @@ while running
                     puts "  You don't have any missed courses."
                 end
             when "List Completed Course"
-                completed_courses_assignments = Student.find(user_data[:user_id]).student_courses.where(status: "Complete")
+                completed_courses_assignments = Student.find(user_data[:user_id]).student_courses.where(status: COURSE_ASSIGNMENT_STATES[1])
                 completed_courses = completed_courses_assignments.map {|completed_course_assignment| completed_course_assignment.course}
                 if completed_courses.count > 0
                     Course.display_course_list_sorted(completed_courses)
@@ -81,6 +85,8 @@ while running
         when USER_TYPES[1]
             command = prompt.select("What would you like to do #{Teacher.find(user_data[:user_id]).first_name}?", TEACHER_MENU, per_page: TEACHER_MENU.length)
             case command
+            when "SWITCH USER"
+                user_data = {selected: false, user_type: nil, user_id: nil}
             when "QUIT"
                 running = false
             when "List All Students"
@@ -106,7 +112,7 @@ while running
                 result = prompt.collect do
                     key(:name).ask("What is the course name?")
                     key(:teacher_id).select("Who is teaching the course?", teachers, per_page: teachers.length)
-                    key(:date_time).ask("What day and time is the course?", convert: :datetime)
+                    key(:date_time).ask("What day and time is the course (yyyy-mm-dd HH:MM)?", convert: :datetime)
                 end
                 Course.create(name: result[:name], teacher_id: result[:teacher_id], date_time: result[:date_time])
             when "Create a Course Assignment"
@@ -116,15 +122,21 @@ while running
                 selected_students_ids = prompt.multi_select("Which students?", students, per_page: students.length)
 
                 selected_students_ids.each do |student_id|
-                    course_assignment = StudentCourse.create(student_id: student_id, course_id: selected_course_id, status: "Incomplete")
+                    course_assignment = StudentCourse.create(student_id: student_id, course_id: selected_course_id, status: COURSE_ASSIGNMENT_STATES[0])
                 end
             when "Delete a Course Assignment"
-                
+                if StudentCourse.all.count > 0
+                    student_courses = StudentCourse.student_courses_with_ids(StudentCourse.all)
+                    selected_student_course_id = prompt.select("Which assignment?", student_courses, per_page: student_courses.length)
+                    StudentCourse.delete(selected_student_course_id)
+                else
+                    puts "  There are no course assigments to delete."
+                end                               
             when "Mark Attendance"
                 student_courses = StudentCourse.student_courses_with_ids(StudentCourse.all)
                 selected_student_course_id = prompt.select("Which assignment?", student_courses, per_page: student_courses.length)
                 selected_student_course_record = StudentCourse.find(selected_student_course_id)
-                selected_student_course_record.update(status: "Complete")
+                selected_student_course_record.update(status: COURSE_ASSIGNMENT_STATES[1])
             when "List My Courses"
                 my_courses = Course.where(teacher_id: user_data[:user_id])
                 if my_courses.count > 0
@@ -139,7 +151,7 @@ while running
                     puts "  There are no course assigments."
                 end
             when "List Missed Course Assignment"
-                incomplete_course_assignments = StudentCourse.all.where(status: "Incomplete")
+                incomplete_course_assignments = StudentCourse.all.where(status: COURSE_ASSIGNMENT_STATES[0])
                 missed_course_assignments = incomplete_course_assignments.select {|incomplete_course_assignment| incomplete_course_assignment.course.date_time < Time.now.to_datetime}
                 if missed_course_assignments.count > 0
                     StudentCourse.display_student_course_list_sorted(missed_course_assignments)
@@ -160,6 +172,7 @@ while running
             students = Student.students_with_ids(Student.all)
             if(students.count > 0)
                 user_id = prompt.select("Which student are you?", students, per_page: students.length)
+                prompt.mask("Enter your password:")
                 user_data[:user_id] = user_id
                 user_data[:selected] = true
                 user_data[:user_type] = command
@@ -170,6 +183,7 @@ while running
             teachers = Student.students_with_ids(Teacher.all)
             if(teachers.count > 0)
                 user_id = prompt.select("Which teacher are you?", teachers, per_page: teachers.length)
+                prompt.mask("Enter your password:")
                 user_data[:user_id] = user_id
                 user_data[:selected] = true
                 user_data[:user_type] = command
