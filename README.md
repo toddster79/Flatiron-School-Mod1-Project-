@@ -2,12 +2,17 @@
 ***
 ## Version Information
 Version 1.0 - Initial Version
+
+## License and Contributers Guide
+This code is open source.  Database contents can be modified by customized by updating the contents of the `/db/seed.rb` file.
+
 ***
+## Executive Summary
 Flatiron Module 1 CLI Course Scheduler by:
 * Doug Johnson
 * Todd Carlson
 
-The Course Scheduler allows course scheduling for teachers and students.  Students are able to see personal course attendance information.  Teachers are able to administrate students, courses, and course assignments.
+The Course Scheduler allows course scheduling for teachers and students.  Students are able to see personal course attendance information.  Teachers are able to administrate students, courses, and course assignments.  The video located at `media/Module1AppSummary.mp4` provides a quick summary of the application.
 
 ***
 ## Assumptions and Limitations
@@ -53,3 +58,8 @@ A `Teacher` is able to:
 
 ### Keyboard Shortcuts
 Pressing the `Esc` key at any time will clear the screen.
+
+### Sample Workflow
+The image below shows an example workflow of selecting a user and listing the users' classmates.
+
+![image](media/ezgif.com-apng-maker.png)
